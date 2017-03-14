@@ -31,12 +31,22 @@ typedef enum
 
 typedef struct
 {
+	unsigned short x1;
+	unsigned short y1;
+	unsigned short x2;
+	unsigned short y2;
+}Square;
+
+typedef struct
+{
 	unsigned short id;				// ИД охотника
 	unsigned short x;
 	unsigned short y;
 	Team team;						// Принадлежность к команде
 	unsigned short state;			// Есть ли призрак у охотника
 	unsigned short value;			// ИД призрака, иначе -1
+
+	unsigned short squre;			// Квадрат в котором находится охотник
 	Action action;
 }Hunter;
 
@@ -56,6 +66,7 @@ typedef struct
 //
 Hunter	*HUNTERS;
 Ghost	*GHOSTS;
+Square *SQRS;
 int myTeamId; // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
 int enTeamId;
 int H_Count = 0;
@@ -67,6 +78,32 @@ int BASE_X, BASE_Y;
 //
 // FUNCTIONS
 //
+void Get_SQRS(int Team_ID)
+{
+	int i, j;
+
+	if(Team_ID == 0)
+		for(i=0;i<8;i++)
+		for (j = 0;j < 5;j++)
+		{
+			SQRS[i * 8 + j].x1 = 2000 * i;
+			SQRS[i * 8 + j].y1 = 1800 * j;
+			SQRS[i * 8 + j].x2 = 2000 * (i + 1);
+			SQRS[i * 8 + j].y2 = 1800 * (j + 1);
+		}
+
+	if (Team_ID == 1)
+		for (i = 0;i<8;i++)
+			for (j = 0;j < 5;j++)
+			{
+				SQRS[i * 8 + j].x1 = 16000 - 2000 * (i + 1);
+				SQRS[i * 8 + j].y1 = 9000 - 1800 * (j + 1);
+				SQRS[i * 8 + j].x2 = 16000 - 2000 * i;
+				SQRS[i * 8 + j].y2 = 9000 - 1800 * j;
+			}
+}
+
+
 void Get_Action(void)
 {
 	int i, j, k;
@@ -129,7 +166,7 @@ void Get_Action(void)
 						}
 					}
 				}
-				else printf("MOVE %d %d\n", 16000-BASE_X, 9000-BASE_Y - 1500*i);
+				else printf("MOVE %d %d\n", 16000-BASE_X, 9000 - BASE_Y - 1500*i);
 			}
 		}
 	}
@@ -155,6 +192,9 @@ int main()
 
 	HUNTERS = (Hunter *)calloc(2*bustersPerPlayer, sizeof(Hunter));
 	GHOSTS	= (Ghost *)	calloc(ghostCount, sizeof(Ghost));
+	SQRS	= (Square *)calloc(8*5, sizeof(Square));
+
+	Get_SQRS(myTeamId);
 
 	ID_TRG = (int *)calloc(bustersPerPlayer, sizeof(int));
 	Trg_Count = bustersPerPlayer;
