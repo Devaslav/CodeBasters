@@ -165,7 +165,7 @@ void Get_Move(Hunter HTR)
 	IS_MOVE = 0;
 	while (IS_MOVE == 0)
 	{
-		if (In_Square(HTR.x, HTR.y, n_sq) == 1)
+		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 500.0) )
 			SQRS[n_sq].walked = 1;
 
 		if ( (SQRS[n_sq].walked == 0) && ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
@@ -175,6 +175,20 @@ void Get_Move(Hunter HTR)
 			IS_MOVE = 1;
 		}
 		n_sq++;
+		if (n_sq == 39)
+		{
+			IS_MOVE = 2;
+			printf("MOVE %d %d\n", SQRS[0].centr_x, SQRS[0].centr_y);
+		}
+	}
+
+	if (MOVE == 2)
+	{
+		for (n_sq = 0;n_sq < 40;n_sq++)
+		{
+			SQRS[n_sq].my_hunter = -1;
+			SQRS[n_sq].walked = 0;
+		}
 	}
 	//	printf("");
 }
