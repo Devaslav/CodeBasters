@@ -19,6 +19,7 @@ typedef enum
 	MOVE,
 	BUST,
 	PULL,
+	STUN,
 	STOP
 }Action;
 
@@ -165,7 +166,7 @@ void Get_Move(Hunter HTR)
 	IS_MOVE = 0;
 	while (IS_MOVE == 0)
 	{
-		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 500.0) )
+		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 200.0) )
 			SQRS[n_sq].walked = 1;
 
 		if ( (SQRS[n_sq].walked == 0) && ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
@@ -210,25 +211,36 @@ void Get_Action(void)
 		if (HUNTERS[i].team == MY)
 		{
 			//fprintf(stderr, "HUNTERS[%d].id=%d\n", i, HUNTERS[i].id);
-			if (HUNTERS[i].state != 0)
+			if (HUNTERS[i].state == 1)
 			{
 				if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, BASE_X, BASE_Y) < 1600.0)
 				{
 					printf("RELEASE\n");
-					HUNTERS[i].action = PULL;
+					HUNTERS[i].state = 0;
+					//HUNTERS[i].action = PULL;
 				}
 				else
 				{
 					printf("MOVE %d %d\n", BASE_X, BASE_Y);
-					HUNTERS[i].action = MOVE;
+					//HUNTERS[i].action = MOVE;
 				}
 			}
 			else
 			{
+				for (j = 0; j < H_Count; j++)
+				{
+					if(	HUNTERS[j].team == EN && HUNTERS[j].state !=2 &&
+						GET_DIST(HUNTERS[i].x, HUNTERS[i].y, HUNTERS[j].x, HUNTERS[j].y) < 1750.0)
+					{
+						printf("STUN %d\n", HUNTERS[j].id);
+						break;
+					}
+				}
+				
 				for (j = 0; j < G_Count; j++)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
-					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist
+					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
 						&& (GHOSTS[j].my_trg == -1))
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
