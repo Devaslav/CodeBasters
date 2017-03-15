@@ -35,6 +35,13 @@ typedef struct
 	unsigned short y1;
 	unsigned short x2;
 	unsigned short y2;
+	unsigned short centr_x;
+	unsigned short centr_y;
+
+	unsigned short walked;			// Исследованли квадрат - 0  или 1 
+	int			   my_hunter;		// Номер моего охотника, идущего туда , иначе -1
+	unsigned short ghosts;			// Количество призраков в квадрате
+	unsigned short priority;		// Приоритетность исследования квадратов от 1(наивысшая) до 8
 }Square;
 
 typedef struct
@@ -75,35 +82,103 @@ int Trg_Count = 0;
 int *ID_TRG;
 
 int BASE_X, BASE_Y;
+/////////////////////////////////////////////////////////////////
 //
 // FUNCTIONS
 //
+/////////////////////////////////////////////////////////////////
 void Get_SQRS(int Team_ID)
 {
 	int i, j;
+	Square Temp_SQR;
 
 	if(Team_ID == 0)
-		for(i=0;i<8;i++)
+		for(i = 0; i< 8;i++)
 		for (j = 0;j < 5;j++)
 		{
-			SQRS[i * 8 + j].x1 = 2000 * i;
-			SQRS[i * 8 + j].y1 = 1800 * j;
-			SQRS[i * 8 + j].x2 = 2000 * (i + 1);
-			SQRS[i * 8 + j].y2 = 1800 * (j + 1);
+			SQRS[i * 5 + j].x1 = 2000 * i;
+			SQRS[i * 5 + j].y1 = 1800 * j;
+			SQRS[i * 5 + j].x2 = 2000 * (i + 1);
+			SQRS[i * 5 + j].y2 = 1800 * (j + 1);
+
+			SQRS[i * 5 + j].centr_x = (2000 * i + 2000 * (i + 1)) / 2;
+			SQRS[i * 5 + j].centr_y = (1800 * j + 1800 * (j + 1)) / 2;
+
+			SQRS[i * 5 + j].priority = round( (GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
+			SQRS[i * 5 + j].walked = 0;
+			SQRS[i * 5 + j].my_hunter = -1;
 		}
 
 	if (Team_ID == 1)
 		for (i = 0;i<8;i++)
 			for (j = 0;j < 5;j++)
 			{
-				SQRS[i * 8 + j].x1 = 16000 - 2000 * (i + 1);
-				SQRS[i * 8 + j].y1 = 9000 - 1800 * (j + 1);
-				SQRS[i * 8 + j].x2 = 16000 - 2000 * i;
-				SQRS[i * 8 + j].y2 = 9000 - 1800 * j;
+				SQRS[i * 5 + j].x1 = 16000 - 2000 * (i + 1);
+				SQRS[i * 5 + j].y1 = 9000 - 1800 * (j + 1);
+				SQRS[i * 5 + j].x2 = 16000 - 2000 * i;
+				SQRS[i * 5 + j].y2 = 9000 - 1800 * j;
+
+				SQRS[i * 5 + j].centr_x = (16000 - 2000 * (i + 1) + 16000 - 2000 * i) / 2;
+				SQRS[i * 5 + j].centr_y = (9000 - 1800 * (j + 1) + 9000 - 1800 * j) / 2;
+
+				SQRS[i * 5 + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
+				SQRS[i * 5 + j].walked = 0;
+				SQRS[i * 5 + j].my_hunter = -1;
 			}
+
+	for (i = 0;i<40;i++)
+		for (j = 0;j < 40;j++)
+		{
+			if (SQRS[i].priority < SQRS[j].priority)
+			{
+				memcpy(&Temp_SQR, &SQRS[j], sizeof(Square));
+				memcpy(&SQRS[j],  &SQRS[i],  sizeof(Square));
+				memcpy(&SQRS[i],  &Temp_SQR, sizeof(Square));
+			}
+		}
+
+	
+	for (i = 0;i < 40;i++)
+	{
+		fprintf(stderr, "SQRS[%d].centr_x=%d\n", i, SQRS[i].centr_x);
+		fprintf(stderr, "SQRS[%d].centr_y=%d\n", i, SQRS[i].centr_y);
+		fprintf(stderr, "SQRS[%d].priority=%d\n", i, SQRS[i].priority);
+	}
+	
 }
+/////////////////////////////////////////////////////////////////
+int In_Square(int x, int y, int S_ID)
+{
+	if ( x > SQRS[S_ID].x1 && x < SQRS[S_ID].x2 &&
+		 y > SQRS[S_ID].y1 && y < SQRS[S_ID].y2	)
+	{
+		return 1;
+	}
+	else return 0;
+}
+/////////////////////////////////////////////////////////////////
+void Get_Move(Hunter HTR)
+{
+	int n_sq = 0;
+	unsigned IS_MOVE;
 
+	IS_MOVE = 0;
+	while (IS_MOVE == 0)
+	{
+		if (In_Square(HTR.x, HTR.y, n_sq) == 1)
+			SQRS[n_sq].walked = 1;
 
+		if ( (SQRS[n_sq].walked == 0) && ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
+		{
+			printf("MOVE %d %d\n", SQRS[n_sq].centr_x, SQRS[n_sq].centr_y);
+			SQRS[n_sq].my_hunter = HTR.id;
+			IS_MOVE = 1;
+		}
+		n_sq++;
+	}
+	//	printf("");
+}
+/////////////////////////////////////////////////////////////////
 void Get_Action(void)
 {
 	int i, j, k;
@@ -126,10 +201,12 @@ void Get_Action(void)
 				if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, BASE_X, BASE_Y) < 1600.0)
 				{
 					printf("RELEASE\n");
+					HUNTERS[i].action = PULL;
 				}
 				else
 				{
 					printf("MOVE %d %d\n", BASE_X, BASE_Y);
+					HUNTERS[i].action = MOVE;
 				}
 			}
 			else
@@ -166,7 +243,7 @@ void Get_Action(void)
 						}
 					}
 				}
-				else printf("MOVE %d %d\n", 16000-BASE_X, 9000 - BASE_Y - 1500*i);
+				else Get_Move(HUNTERS[i]);
 			}
 		}
 	}
