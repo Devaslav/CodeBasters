@@ -183,7 +183,7 @@ void Get_Move(Hunter HTR)
 		}
 	}
 
-	if (MOVE == 2)
+	if (IS_MOVE == 2)
 	{
 		for (n_sq = 0;n_sq < 40;n_sq++)
 		{
@@ -197,7 +197,7 @@ void Get_Move(Hunter HTR)
 void Get_Action(void)
 {
 	int i, j, k;
-	int Ghost_ID, T_Dist, n_Trg;
+	int Ghost_ID,Stun_ID, T_Dist, n_Trg;
 	float Min_Dist;
 
 	fprintf(stderr, "H_Count=%d\n", H_Count);
@@ -208,6 +208,7 @@ void Get_Action(void)
 	{
 		Min_Dist = 1000000.0;
 		Ghost_ID = -1;
+		Stun_ID = -1;
 		if (HUNTERS[i].team == MY)
 		{
 			//fprintf(stderr, "HUNTERS[%d].id=%d\n", i, HUNTERS[i].id);
@@ -227,25 +228,25 @@ void Get_Action(void)
 			}
 			else
 			{
-				for (j = 0; j < H_Count; j++)
-				{
-					if(	HUNTERS[j].team == EN && HUNTERS[j].state !=2 &&
-						GET_DIST(HUNTERS[i].x, HUNTERS[i].y, HUNTERS[j].x, HUNTERS[j].y) < 1750.0)
-					{
-						printf("STUN %d\n", HUNTERS[j].id);
-						break;
-					}
-				}
 				
 				for (j = 0; j < G_Count; j++)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
-					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
-						&& (GHOSTS[j].my_trg == -1))
+					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist )
+						//&& (GHOSTS[j].my_trg == -1))
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
 						fprintf(stderr, "Min_Dist=%d\n-------\n", Min_Dist);
 						Ghost_ID = GHOSTS[j].id;
+					}
+				}
+
+				for (j = 0; j < H_Count; j++)
+				{
+					if (HUNTERS[j].team == EN && HUNTERS[j].state != 2 &&
+						GET_DIST(HUNTERS[i].x, HUNTERS[i].y, HUNTERS[j].x, HUNTERS[j].y) < 1750.0)
+					{
+						Stun_ID = HUNTERS[j].id;
 					}
 				}
 
@@ -260,7 +261,7 @@ void Get_Action(void)
 					{
 						if (GHOSTS[j].id == Ghost_ID)
 						{
-							if (Min_Dist > 900 && Min_Dist < 1760)
+							if (Min_Dist < 1750)
 								printf("BUST %d\n", GHOSTS[j].id);
 							else
 								printf("MOVE %d %d\n", GHOSTS[j].x, GHOSTS[j].y);
@@ -269,7 +270,12 @@ void Get_Action(void)
 						}
 					}
 				}
-				else Get_Move(HUNTERS[i]);
+				else 
+					if(Stun_ID != -1) printf("STUN %d\n", Stun_ID);
+					else
+					{
+						Get_Move(HUNTERS[i]);
+					}
 			}
 		}
 	}
