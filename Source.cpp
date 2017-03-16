@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <memory.h>
 #include <math.h>
 
 #define GET_DIST(X1, Y1, X2, Y2) ( sqrt((X1-X2)*(X1-X2)+(Y1-Y2)*(Y1-Y2)) ) 
@@ -65,6 +66,7 @@ typedef struct
 	unsigned short y;
 	Team team;						// Принадлежность к команде
 	unsigned short value;			// 0 если призрак не атакован, иначе количество атакующих охотников
+	unsigned short stamina;			// ХП призрака - не регенрят
 	int			   my_trg;			// ИД моего охотника, нацеленного на данного призрака, иначе -1
 	Action action;
 }Ghost;
@@ -75,6 +77,7 @@ typedef struct
 Hunter	*HUNTERS;
 Ghost	*GHOSTS;
 Square *SQRS;
+Square *SQRS2;
 int myTeamId; // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
 int enTeamId;
 int H_Count = 0;
@@ -158,10 +161,16 @@ int In_Square(int x, int y, int S_ID)
 	else return 0;
 }
 /////////////////////////////////////////////////////////////////
-void Get_Move(Hunter HTR)
+void Get_Move(Hunter HTR, int TYPE_MOVE)
 {
 	int n_sq = 0;
 	unsigned IS_MOVE;
+
+	//if (TYPE_MOVE == 0) memcpy(T_SQRS, SQRS, 8 * 5 * sizeof(Square));
+	//if (TYPE_MOVE == 0) memcpy(T_SQRS, SQRS, 8 * 5 * sizeof(Square));
+
+	if (TYPE_MOVE == 0) { n_sq = 0; }
+	if (TYPE_MOVE == 1) { n_sq = 39; }
 
 	IS_MOVE = 0;
 	while (IS_MOVE == 0)
@@ -175,11 +184,14 @@ void Get_Move(Hunter HTR)
 			SQRS[n_sq].my_hunter = HTR.id;
 			IS_MOVE = 1;
 		}
-		n_sq++;
-		if (n_sq == 39)
+		
+		if (TYPE_MOVE == 0) { n_sq ++; }
+		if (TYPE_MOVE == 1) { n_sq --; }
+
+		if ( ((TYPE_MOVE == 0) && (n_sq == 39)) || ((TYPE_MOVE == 1) && (n_sq == 0)) )
 		{
 			IS_MOVE = 2;
-			printf("MOVE %d %d\n", SQRS[0].centr_x, SQRS[0].centr_y);
+			printf("MOVE %d %d\n", SQRS[22].centr_x, SQRS[22].centr_y);
 		}
 	}
 
@@ -232,8 +244,10 @@ void Get_Action(void)
 				for (j = 0; j < G_Count; j++)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
-					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist )
-						//&& (GHOSTS[j].my_trg == -1))
+					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
+						//&& (GHOSTS[j].my_trg == -1)
+						//&& GHOSTS[j].stamina != 40
+						)
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
 						fprintf(stderr, "Min_Dist=%d\n-------\n", Min_Dist);
@@ -274,7 +288,7 @@ void Get_Action(void)
 					if(Stun_ID != -1) printf("STUN %d\n", Stun_ID);
 					else
 					{
-						Get_Move(HUNTERS[i]);
+						Get_Move(HUNTERS[i], HUNTERS[i].id % 2);
 					}
 			}
 		}
@@ -302,6 +316,7 @@ int main()
 	HUNTERS = (Hunter *)calloc(2*bustersPerPlayer, sizeof(Hunter));
 	GHOSTS	= (Ghost *)	calloc(ghostCount, sizeof(Ghost));
 	SQRS	= (Square *)calloc(8*5, sizeof(Square));
+	SQRS2	= (Square *)calloc(8*5, sizeof(Square));
 
 	Get_SQRS(myTeamId);
 
@@ -331,6 +346,7 @@ int main()
 				GHOSTS[G_Count].x = x;
 				GHOSTS[G_Count].y = y;
 				GHOSTS[G_Count].value = value;
+				GHOSTS[G_Count].stamina = state;
 
 				GHOSTS[G_Count].my_trg = -1;
 
