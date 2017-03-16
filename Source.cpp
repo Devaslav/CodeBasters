@@ -209,7 +209,7 @@ void Get_Move(Hunter HTR, int TYPE_MOVE)
 void Get_Action(void)
 {
 	int i, j, k;
-	int Ghost_ID,Stun_ID, T_Dist, n_Trg;
+	int Ghost_ID,Stun_ID, n_Trg;
 	float Min_Dist;
 
 	fprintf(stderr, "H_Count=%d\n", H_Count);
@@ -245,12 +245,12 @@ void Get_Action(void)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
 					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
-						//&& (GHOSTS[j].my_trg == -1)
+						//&&  ( (GHOSTS[j].my_trg != -1 && GHOSTS[j].stamina==40) || (GHOSTS[j].my_trg == -1) )
 						//&& GHOSTS[j].stamina != 40
 						)
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
-						fprintf(stderr, "Min_Dist=%d\n-------\n", Min_Dist);
+						fprintf(stderr, "Min_Dist=%f\n-------\n", Min_Dist);
 						Ghost_ID = GHOSTS[j].id;
 					}
 				}
