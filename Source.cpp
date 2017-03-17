@@ -185,18 +185,21 @@ int In_Square(int x, int y, int S_ID)
 /////////////////////////////////////////////////////////////////
 void Get_Move(Hunter HTR, unsigned TYPE)
 {
-	int n_sq = 0;
+	int n_sq;
 	unsigned IS_MOVE;
 
 	Get_Sort_SQRS(HTR.x, HTR.y, TYPE);
 
 	IS_MOVE = 0;
+	n_sq = 0;
 	while (IS_MOVE == 0)
 	{
-		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 400.0) )
+		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 800.0) )
 			SQRS[n_sq].walked = 1;
 
-		if ( (SQRS[n_sq].walked == 0) )//&& ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
+		if ( (SQRS[n_sq].walked == 0) && ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) &&
+			!( SQRS[n_sq].x1==0 && SQRS[n_sq].y1==0) && !(SQRS[n_sq].x2 == 16000 && SQRS[n_sq].y2 == 9000)
+			)
 		{
 			printf("MOVE %d %d\n", SQRS[n_sq].centr_x, SQRS[n_sq].centr_y);
 			SQRS[n_sq].my_hunter = HTR.id;
@@ -228,6 +231,7 @@ void Get_Action(void)
 	int i, j, k;
 	int Ghost_ID,Stun_ID, n_Trg;
 	float Min_Dist;
+	int Min_Stamina;
 
 	fprintf(stderr, "H_Count=%d\n", H_Count);
 	fprintf(stderr, "G_Count=%d\n", G_Count);
@@ -236,6 +240,7 @@ void Get_Action(void)
 	for (i = 0;i < H_Count;i++)
 	{
 		Min_Dist = 1000000.0;
+		Min_Stamina = 100;
 		Ghost_ID = -1;
 		Stun_ID = -1;
 		if (HUNTERS[i].team == MY)
@@ -251,7 +256,7 @@ void Get_Action(void)
 				}
 				else
 				{
-					printf("MOVE %d %d\n", BASE_X, BASE_Y);
+					printf("MOVE %d %d\n", BASE_X, BASE_Y );
 					//HUNTERS[i].action = MOVE;
 				}
 			}
@@ -263,11 +268,13 @@ void Get_Action(void)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
 					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
-						//&& !(GHOSTS[j].my_trg != -1 && TURN < 50)
+						 && GHOSTS[j].stamina <= Min_Stamina
+						 //&& !(GHOSTS[j].stamina == 40 && TURN < 10*(10 / Trg_Count) )
 						)
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
-						fprintf(stderr, "Min_Dist=%f\n-------\n", Min_Dist);
+						Min_Stamina = GHOSTS[j].stamina;
+						//fprintf(stderr, "Min_Dist=%f\n-------\n", Min_Dist);
 						Ghost_ID = GHOSTS[j].id;
 					}
 				}
