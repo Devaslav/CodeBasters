@@ -78,6 +78,11 @@ Hunter	*HUNTERS;
 Ghost	*GHOSTS;
 Square *SQRS;
 Square *SQRS2;
+
+#define X_PARTS 10
+#define Y_PARTS 5
+
+
 int myTeamId; // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
 int enTeamId;
 int H_Count = 0;
@@ -97,47 +102,50 @@ void Get_SQRS(int Team_ID)
 {
 	int i, j;
 
-	if(Team_ID == 0)
-		for(i = 0; i< 8;i++)
-		for (j = 0;j < 5;j++)
+	//if(Team_ID == 0)
+		for(i = 0; i< X_PARTS;i++)
+		for (j = 0;j < Y_PARTS;j++)
 		{
-			SQRS[i * 5 + j].x1 = 2000 * i;
-			SQRS[i * 5 + j].y1 = 1800 * j;
-			SQRS[i * 5 + j].x2 = 2000 * (i + 1);
-			SQRS[i * 5 + j].y2 = 1800 * (j + 1);
+			SQRS[i * Y_PARTS + j].x1 = (16000 / X_PARTS)  * i;
+			SQRS[i * Y_PARTS + j].y1 = (9000 / Y_PARTS) * j;
+			SQRS[i * Y_PARTS + j].x2 = (16000 / X_PARTS) * (i + 1);
+			SQRS[i * Y_PARTS + j].y2 = (9000 / Y_PARTS) * (j + 1);
 
-			SQRS[i * 5 + j].centr_x = (2000 * i + 2000 * (i + 1)) / 2;
-			SQRS[i * 5 + j].centr_y = (1800 * j + 1800 * (j + 1)) / 2;
+			SQRS[i * Y_PARTS + j].centr_x = ((16000 / X_PARTS) * i + (16000 / X_PARTS) * (i + 1)) / 2;
+			SQRS[i * Y_PARTS + j].centr_y = ((9000 / Y_PARTS) * j + (9000 / Y_PARTS) * (j + 1)) / 2;
 
-			//SQRS[i * 5 + j].priority = round( (GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
-			SQRS[i * 5 + j].walked = 0;
-			SQRS[i * 5 + j].my_hunter = -1;
+			//SQRS[i Y_PARTS + j].priority = round( (GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
+
+			SQRS[i * Y_PARTS + j].walked = 0;
+			SQRS[i * Y_PARTS + j].my_hunter = -1;
 		}
 
+	/*
 	if (Team_ID == 1)
-		for (i = 0;i<8;i++)
-			for (j = 0;j < 5;j++)
+		for (i = 0;i<X_PARTS;i++)
+			for (j = 0;j < Y_PARTS;j++)
 			{
-				SQRS[i * 5 + j].x1 = 16000 - 2000 * (i + 1);
-				SQRS[i * 5 + j].y1 = 9000 - 1800 * (j + 1);
-				SQRS[i * 5 + j].x2 = 16000 - 2000 * i;
-				SQRS[i * 5 + j].y2 = 9000 - 1800 * j;
+				SQRS[i * Y_PARTS + j].x1 = 16000 - (16000 / X_PARTS) * (i + 1);
+				SQRS[i * Y_PARTS + j].y1 = 9000 - 1800 * (j + 1);
+				SQRS[i * Y_PARTS + j].x2 = 16000 - (16000 / X_PARTS) * i;
+				SQRS[i * Y_PARTS + j].y2 = 9000 - 1800 * j;
 
-				SQRS[i * 5 + j].centr_x = (16000 - 2000 * (i + 1) + 16000 - 2000 * i) / 2;
-				SQRS[i * 5 + j].centr_y = (9000 - 1800 * (j + 1) + 9000 - 1800 * j) / 2;
+				SQRS[i * Y_PARTS + j].centr_x = (16000 - (16000 / X_PARTS) * (i + 1) + 16000 - (16000 / X_PARTS) * i) / 2;
+				SQRS[i * Y_PARTS + j].centr_y = (9000 - 1800 * (j + 1) + 9000 - 1800 * j) / 2;
 
-				//SQRS[i * 5 + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
-				SQRS[i * 5 + j].walked = 0;
-				SQRS[i * 5 + j].my_hunter = -1;
+				//SQRS[i Y_PARTS + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 8000, 4500)) / 1000.0);
+
+				SQRS[i * Y_PARTS + j].walked = 0;
+				SQRS[i * Y_PARTS + j].my_hunter = -1;
 			}
+	*/
 
-
-	for (i = 0;i < 40;i++)
-	{
+	//for (i = 0;i < X_PARTS*Y_PARTS;i++)
+	//{
 		//fprintf(stderr, "SQRS[%d].centr_x=%d\n", i, SQRS[i].centr_x);
 		//fprintf(stderr, "SQRS[%d].centr_y=%d\n", i, SQRS[i].centr_y);
 		//fprintf(stderr, "SQRS[%d].priority=%d\n", i, SQRS[i].priority);
-	}
+	//}
 	
 }
 /////////////////////////////////////////////////////////////////
@@ -147,30 +155,14 @@ void Get_Sort_SQRS(int X, int Y, unsigned TYPE)
 	Square Temp_SQR;
 
 	//if(TYPE == 0 || TYPE == 3 || TYPE == 4)
-	for (i = 0;i<8;i++)
-		for (j = 0;j < 5;j++)
+	for (i = 0;i<X_PARTS;i++)
+		for (j = 0;j < Y_PARTS;j++)
 		{
-			SQRS[i * 5 + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, X, Y)) / 1000.0);
-
+			SQRS[i * Y_PARTS + j].priority = round((GET_DIST(SQRS[i * Y_PARTS + j].centr_x, SQRS[i * Y_PARTS + j].centr_y, X, Y)) / 1000.0);
 		}
-	/*
-	if (TYPE == 1)
-		for (i = 0;i<8;i++)
-			for (j = 0;j < 5;j++)
-			{
-				SQRS[i * 5 + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, BASE_X, 9000-BASE_Y)) / 1000.0);
-			}
 
-	if (TYPE == 2)
-		for (i = 0;i<8;i++)
-			for (j = 0;j < 5;j++)
-			{
-				SQRS[i * 5 + j].priority = round((GET_DIST(SQRS[i * 5 + j].centr_x, SQRS[i * 5 + j].centr_y, 16000-BASE_X, BASE_Y)) / 1000.0);
-			}
-	*/
-
-	for (i = 0;i<40;i++)
-		for (j = 0;j < 40;j++)
+	for (i = 0;i<X_PARTS*Y_PARTS;i++)
+		for (j = 0;j <X_PARTS*Y_PARTS;j++)
 		{
 			if (SQRS[i].priority < SQRS[j].priority)
 			{
@@ -201,10 +193,10 @@ void Get_Move(Hunter HTR, unsigned TYPE)
 	IS_MOVE = 0;
 	while (IS_MOVE == 0)
 	{
-		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 200.0) )
+		if (In_Square(HTR.x, HTR.y, n_sq) == 1 && (GET_DIST(HTR.x, HTR.y, SQRS[n_sq].centr_x, SQRS[n_sq].centr_y) < 400.0) )
 			SQRS[n_sq].walked = 1;
 
-		if ( (SQRS[n_sq].walked == 0) && ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
+		if ( (SQRS[n_sq].walked == 0) )//&& ( SQRS[n_sq].my_hunter == -1 || SQRS[n_sq].my_hunter == HTR.id) )
 		{
 			printf("MOVE %d %d\n", SQRS[n_sq].centr_x, SQRS[n_sq].centr_y);
 			SQRS[n_sq].my_hunter = HTR.id;
@@ -213,16 +205,16 @@ void Get_Move(Hunter HTR, unsigned TYPE)
 		
 		n_sq ++;
 
-		if ( n_sq == 39 )
+		if ( n_sq == (X_PARTS*Y_PARTS-1) )
 		{
 			IS_MOVE = 2;
-			printf("MOVE %d %d\n", SQRS[22].centr_x, SQRS[22].centr_y);
+			printf("MOVE %d %d\n", SQRS[(X_PARTS*Y_PARTS)/2].centr_x, SQRS[(X_PARTS*Y_PARTS)/2].centr_y);
 		}
 	}
 
 	if (IS_MOVE == 2)
 	{
-		for (n_sq = 0;n_sq < 8*5 ;n_sq++)
+		for (n_sq = 0;n_sq < (X_PARTS*Y_PARTS - 1);n_sq++)
 		{
 			SQRS[n_sq].my_hunter = -1;
 			SQRS[n_sq].walked = 0;
@@ -266,13 +258,12 @@ void Get_Action(void)
 			else
 			{
 				
+				//
 				for (j = 0; j < G_Count; j++)
 				{
 					//fprintf(stderr, "DIST=%f\n", GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y));
 					if (GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y) < Min_Dist 
 						//&& !(GHOSTS[j].my_trg != -1 && TURN < 50)
-						//&&  ( (GHOSTS[j].my_trg != -1 && GHOSTS[j].stamina==40) || (GHOSTS[j].my_trg == -1) )
-						//&& GHOSTS[j].stamina != 40
 						)
 					{
 						Min_Dist = GET_DIST(HUNTERS[i].x, HUNTERS[i].y, GHOSTS[j].x, GHOSTS[j].y);
@@ -281,15 +272,17 @@ void Get_Action(void)
 					}
 				}
 
+				//
 				for (j = 0; j < H_Count; j++)
 				{
 					if (HUNTERS[j].team == EN && HUNTERS[j].state != 2 && //  && HUNTERS[j].state == 1 &&
-						GET_DIST(HUNTERS[i].x, HUNTERS[i].y, HUNTERS[j].x, HUNTERS[j].y) < 1750.0)
+						GET_DIST(HUNTERS[i].x, HUNTERS[i].y, HUNTERS[j].x, HUNTERS[j].y) < 1760.0)
 					{
 						Stun_ID = HUNTERS[j].id;
 					}
 				}
 
+				//
 				if (Ghost_ID != -1)
 				{
 					ID_TRG[n_Trg] = Ghost_ID;
@@ -301,7 +294,7 @@ void Get_Action(void)
 					{
 						if (GHOSTS[j].id == Ghost_ID)
 						{
-							if (Min_Dist < 1750)
+							if (Min_Dist < 1760.0)
 								printf("BUST %d\n", GHOSTS[j].id);
 							else
 								printf("MOVE %d %d\n", GHOSTS[j].x, GHOSTS[j].y);
@@ -314,7 +307,7 @@ void Get_Action(void)
 					if(Stun_ID != -1) printf("STUN %d\n", Stun_ID);
 					else
 					{
-						Get_Move(HUNTERS[i], HUNTERS[i].id % 5);
+						Get_Move(HUNTERS[i], HUNTERS[i].id % 6);
 					}
 			}
 		}
@@ -338,8 +331,8 @@ int main()
 
 	HUNTERS = (Hunter *)calloc(2*bustersPerPlayer, sizeof(Hunter));
 	GHOSTS	= (Ghost *)	calloc(ghostCount, sizeof(Ghost));
-	SQRS	= (Square *)calloc(8*5, sizeof(Square));
-	SQRS2	= (Square *)calloc(8*5, sizeof(Square));
+	SQRS	= (Square *)calloc(X_PARTS*Y_PARTS, sizeof(Square));
+	SQRS2	= (Square *)calloc(X_PARTS*Y_PARTS, sizeof(Square));
 
 	Get_SQRS(myTeamId);
 
